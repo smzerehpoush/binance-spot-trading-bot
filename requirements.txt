@@ -1,0 +1,5 @@
+python-binance==1.0.16
+python-dotenv==0.20.0
+pandas==1.4.3
+python-telegram-bot==13.13
+telegram==0.0.1
