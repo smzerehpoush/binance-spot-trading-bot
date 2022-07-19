@@ -39,6 +39,10 @@ To write custom bots you can:
 4. Finally, set `TELEGRAM_API_KEY` and `TELEGRAM_USER_ID` in `credentials.py`, and `SEND_TELEGRAM_MESSAGE`
    in `config.py` .
 
+## See Also
+
+- [Binance Futures Trading Bot](https://github.com/erfaniaa/binance-futures-trading-bot/)
+
 ## To-do
 
 - Add more indicators to `indicators.py`.
