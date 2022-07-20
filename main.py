@@ -45,8 +45,10 @@ def update_account_usdt_balance():
     logging.info('trying to update account USDT balance')
     global account_free_usdt_balance
     global last_account_free_usdt_balances_list
+    last_account_free_usdt_balances_list = []
     global account_locked_usdt_balance
     global last_account_locked_usdt_balances_list
+    last_account_locked_usdt_balances_list = []
     for i in range(MAXIMUM_NUMBER_OF_API_CALL_TRIES):
         try:
             logging.info('trying to get USDT balance')
