@@ -36,7 +36,7 @@ To write custom bots you can:
    to [@userinfobot](https://t.me/userinfobot) to get this information.
 3. Thirdly, you have to `/start` your bot. Open up a private message with your bot by searching its username, then hit
    the start button.
-4. Finally, set `TELEGRAM_API_KEY` in `credentials.py`, and `SEND_TELEGRAM_MESSAGE` and `TELEGRAM_USER_ID`
+4. Finally, set `TELEGRAM_API_KEY` in `credentials.py`, and `SEND_TELEGRAM_MESSAGE` and `TELEGRAM_USER_ID_LIST`
    in `config.py` .
 
 ## See Also
