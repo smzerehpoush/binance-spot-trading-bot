@@ -14,7 +14,7 @@ Easy-to-use multi-strategic automatic trading for Binance Spot with Telegram int
 ## Run
 
 1. Clone the repository.
-2. Generate a Binance API key (with Spot access) and put it in `credentials.py`.
+2. Generate a Binance API key (with Spot access) and put it in your custom `.env`.
 3. Run `pip3 install -r requirements.txt`.
 4. Run `python3 main.py`.
 
