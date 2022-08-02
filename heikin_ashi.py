@@ -1,47 +1,38 @@
 from binance.enums import *
 from binance.client import Client
+import pandas as pd
+import numpy as np
+from datetime import datetime, timedelta
 
 
-def calculate_heikin_ashi(symbol, start, end):
-    # [0- open time,
-    # 1- open,
-    # 2- high,
-    # 3- low,
-    # 4- close,
-    # 5- volume,
-    # 6- close time,
-    # 7- Quote asset volume,
-    # 8- Number of trades,
-    # 9-Taker buy base asset volume,
-    # 10- Taker buy quote asset volume]
+def calculate_heikin_ashi(symbol, start_date, end_date):
     data = Client().get_historical_klines(
         symbol=symbol + 'USDT',
         interval=KLINE_INTERVAL_1DAY,
-        start_str=start,
-        end_str=end,
+        start_str=start_date,
+        end_str=end_date,
         klines_type=HistoricalKlinesType.SPOT
     )
+    data_frame = pd.DataFrame(data)
+    data_frame = data_frame.iloc[:, 1:6]
+    data_frame.columns = ['open', 'high', 'low', 'close', 'volume']
+    data_frame = data_frame.astype(float)
+    print(heikin_ashi_tradingview(data_frame))
 
-    def ha_low(row):
-        return min(float(data[row][3]), float(data[row][1]), float(data[row][4]))
 
-    def ha_high(row):
-        return max(float(data[row][2]), float(data[row][1]), float(data[row][4]))
+def heikin_ashi_tradingview(df: pd.DataFrame):
+    heikin_ashi_df = pd.DataFrame(index=df.index.values, columns=['open', 'high', 'low', 'close'])
 
-    def ha_op(row):
-        return (float(data[row - 1][1]) + float(data[row - 1][4])) / 2
+    heikin_ashi_df['close'] = (df['open'] + df['high'] + df['low'] + df['close']) / 4
 
-    def ha_close(row):
-        return (float(data[row][1]) + float(data[row][2]) + float(data[row][3]) + float(data[row][4])) / 4
+    for i in range(len(df)):
+        if i == 0:
+            heikin_ashi_df.iat[0, 0] = df['open'].iloc[0]
+        else:
+            heikin_ashi_df.iat[i, 0] = (heikin_ashi_df.iat[i - 1, 0] + heikin_ashi_df.iat[i - 1, 3]) / 2
 
-    ha_candle = []
-    for x in range(len(data) - 1):
-        x += 1
-        ha_candle.append({
-            'low': ha_low(x),
-            'high': ha_high(x),
-            'open': ha_op(x),
-            'close': ha_close(x)
-        })
+    heikin_ashi_df['high'] = heikin_ashi_df.loc[:, ['open', 'close']].join(df['high']).max(axis=1)
 
-    return ha_candle
+    heikin_ashi_df['low'] = heikin_ashi_df.loc[:, ['open', 'close']].join(df['low']).min(axis=1)
+
+    return heikin_ashi_df.iloc[-1]
