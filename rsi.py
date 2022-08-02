@@ -1,58 +1,37 @@
 from binance.enums import *
 from binance.client import Client
 import pandas as pd
+import numpy as np
+from datetime import datetime, timedelta
 
 
-def calculate_rsi(symbol, start, end, period):
-    # [0- open time,
-    # 1- open,
-    # 2- high,
-    # 3- low,
-    # 4- close,
-    # 5- volume,
-    # 6- close time,
-    # 7- Quote asset volume,
-    # 8- Number of trades,
-    # 9-Taker buy base asset volume,
-    # 10- Taker buy quote asset volume]
+def calculate_rsi(symbol, start_date, end_date, period):
     data = Client().get_historical_klines(
         symbol=symbol + 'USDT',
         interval=KLINE_INTERVAL_1DAY,
-        start_str=start,
-        end_str=end,
+        start_str=start_date,
+        end_str=end_date,
         klines_type=HistoricalKlinesType.SPOT
     )
-    for item in data:
-        item[1] = float(item[1])
-        item[2] = float(item[2])
-        item[3] = float(item[3])
-        item[4] = float(item[4])
-        del item[5:]
-
-    dataframe = pd.DataFrame(data, columns=['date', 'open', 'high', 'low', 'close'])
-    dataframe.set_index('date', inplace=True)
-
-    return rsi(dataframe, period).iloc[-1]
+    data_frame = pd.DataFrame(data)
+    data_frame = data_frame.iloc[:, 1:6]
+    data_frame.columns = ['open', 'high', 'low', 'close', 'volume']
+    data_frame = data_frame.astype(float)
+    print(rsi_tradingview(data_frame, period))
 
 
-def rsi(df, periods=14, ema=True):
-    """
-    Returns a pd.Series with the relative strength index.
-    """
-    close_delta = df['close'].diff()
+def rsi_tradingview(ohlc: pd.DataFrame, period: int = 14, round_rsi: bool = True):
+    delta = ohlc["close"].diff()
 
-    # Make two series: one for lower closes and one for higher closes
-    up = close_delta.clip(lower=0)
-    down = -1 * close_delta.clip(upper=0)
+    up = delta.copy()
+    up[up < 0] = 0
+    up = pd.Series.ewm(up, alpha=1 / period).mean()
 
-    if ema:
-        # Use exponential moving average
-        ma_up = up.ewm(com=periods - 1, adjust=True, min_periods=periods).mean()
-        ma_down = down.ewm(com=periods - 1, adjust=True, min_periods=periods).mean()
-    else:
-        # Use simple moving average
-        ma_up = up.rolling(window=periods, adjust=False).mean()
-        ma_down = down.rolling(window=periods, adjust=False).mean()
+    down = delta.copy()
+    down[down > 0] = 0
+    down *= -1
+    down = pd.Series.ewm(down, alpha=1 / period).mean()
 
-    rsi_value = ma_up / ma_down
-    return 100 - (100 / (1 + rsi_value))
+    rsi = np.where(up == 0, 0, np.where(down == 0, 100, 100 - (100 / (1 + up / down))))
+
+    return np.round(rsi, 2)[-1] if round_rsi else rsi[-1]
